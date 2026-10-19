@@ -74,6 +74,7 @@ async def create_job(image: UploadFile = File(...)) -> dict:
     if len(image_bytes) > MAX_UPLOAD_BYTES:
         raise HTTPException(status_code=413, detail="圖片不可超過 25 MB。")
 
+    logger.info("job_received upload_bytes=%d", len(image_bytes))
     try:
         prepared = await run_in_threadpool(prepare_form, image_bytes)
     except ValueError as exc:

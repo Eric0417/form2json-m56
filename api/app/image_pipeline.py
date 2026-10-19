@@ -8,7 +8,7 @@ from PIL import Image, ImageOps
 
 WARP_WIDTH = 2400
 WARP_HEIGHT = 1700
-MAX_DECODE_SIDE = 4096
+MAX_DECODE_SIDE = 2800
 
 cv2.setNumThreads(1)
 cv2.ocl.setUseOpenCL(False)
@@ -57,6 +57,8 @@ def _decode_image(image_bytes: bytes) -> np.ndarray:
 
     if image.width * image.height > 80_000_000:
         raise ValueError("圖片尺寸過大，請先縮小到 8000 萬像素以下。")
+    if image.format != "JPEG" and image.width * image.height > 25_000_000:
+        raise ValueError("大型照片請先轉存為 JPEG 再上傳。")
 
     # JPEG can decode directly at a smaller size, avoiding a full 48 MP RGB buffer.
     image.draft("RGB", (MAX_DECODE_SIDE, MAX_DECODE_SIDE))

@@ -1,4 +1,4 @@
-const MAX_UPLOAD_SIDE = 4096;
+const MAX_UPLOAD_SIDE = 2800;
 const MAX_UNCOMPRESSED_BYTES = 8 * 1024 * 1024;
 
 export async function prepareImageForUpload(file: File): Promise<File> {
