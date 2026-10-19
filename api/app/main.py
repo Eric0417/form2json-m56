@@ -1,4 +1,5 @@
 import json
+import logging
 import shutil
 import tempfile
 import time
@@ -25,6 +26,7 @@ MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 JOB_ROOT = Path(tempfile.gettempdir()) / "form2json-jobs"
 
 app = FastAPI(title="終點紀錄表轉檔", version="0.1.0")
+logger = logging.getLogger("form2json")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DIST_ROOT = PROJECT_ROOT / "dist"
@@ -78,6 +80,14 @@ async def create_job(image: UploadFile = File(...)) -> dict:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     job_id = str(uuid.uuid4())
+    logger.info(
+        "job_created id=%s upload_bytes=%d warped=%dx%d groups=%d",
+        job_id,
+        len(image_bytes),
+        prepared.width,
+        prepared.height,
+        len(prepared.groups),
+    )
     job_dir = JOB_ROOT / job_id
     job_dir.mkdir(parents=True, exist_ok=False)
     (job_dir / "warped.jpg").write_bytes(prepared.warped_jpeg)

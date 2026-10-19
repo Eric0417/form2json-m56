@@ -4,6 +4,7 @@ import type {
   HealthStatus,
   JobResponse,
 } from "../types";
+import { prepareImageForUpload } from "./image";
 
 async function responseError(response: Response): Promise<Error> {
   try {
@@ -23,8 +24,9 @@ export async function fetchHealth(signal?: AbortSignal): Promise<HealthStatus> {
 }
 
 export async function createJob(file: File): Promise<JobResponse> {
+  const upload = await prepareImageForUpload(file);
   const body = new FormData();
-  body.append("image", file);
+  body.append("image", upload);
   const response = await fetch("/api/jobs", {
     method: "POST",
     body,

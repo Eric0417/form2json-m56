@@ -1,9 +1,11 @@
+from io import BytesIO
 from pathlib import Path
 
 import cv2
 import numpy as np
+from PIL import Image
 
-from app.image_pipeline import prepare_form
+from app.image_pipeline import MAX_DECODE_SIDE, _decode_image, prepare_form
 
 
 SAMPLE = Path(__file__).resolve().parents[2] / "IMG_5222.jpeg"
@@ -38,3 +40,13 @@ def test_rejects_non_image_bytes():
         assert "圖片" in str(exc)
     else:
         raise AssertionError("Expected invalid image to be rejected")
+
+
+def test_large_jpeg_is_downscaled_before_opencv_processing():
+    image = Image.new("RGB", (8000, 6000), "white")
+    buffer = BytesIO()
+    image.save(buffer, format="JPEG", quality=80)
+
+    decoded = _decode_image(buffer.getvalue())
+
+    assert max(decoded.shape[:2]) <= MAX_DECODE_SIDE

@@ -8,6 +8,10 @@ from PIL import Image, ImageOps
 
 WARP_WIDTH = 2400
 WARP_HEIGHT = 1700
+MAX_DECODE_SIDE = 4096
+
+cv2.setNumThreads(1)
+cv2.ocl.setUseOpenCL(False)
 
 
 @dataclass(frozen=True)
@@ -48,14 +52,22 @@ def _order_points(points: np.ndarray) -> np.ndarray:
 def _decode_image(image_bytes: bytes) -> np.ndarray:
     try:
         image = Image.open(BytesIO(image_bytes))
-        image = ImageOps.exif_transpose(image).convert("RGB")
     except Exception as exc:
         raise ValueError("無法讀取圖片，請改用 JPEG、PNG 或 WebP 檔。") from exc
 
     if image.width * image.height > 80_000_000:
         raise ValueError("圖片尺寸過大，請先縮小到 8000 萬像素以下。")
 
-    return cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+    # JPEG can decode directly at a smaller size, avoiding a full 48 MP RGB buffer.
+    image.draft("RGB", (MAX_DECODE_SIDE, MAX_DECODE_SIDE))
+    image = ImageOps.exif_transpose(image)
+    if max(image.size) > MAX_DECODE_SIDE:
+        image.thumbnail(
+            (MAX_DECODE_SIDE, MAX_DECODE_SIDE),
+            Image.Resampling.LANCZOS,
+        )
+    rgb = image.convert("RGB")
+    return cv2.cvtColor(np.asarray(rgb), cv2.COLOR_RGB2BGR)
 
 
 def _find_paper_quad(image: np.ndarray) -> np.ndarray:
@@ -199,6 +211,7 @@ def prepare_form(image_bytes: bytes) -> PreparedForm:
     image = _decode_image(image_bytes)
     paper_quad = _find_paper_quad(image)
     warped = _warp_paper(image, paper_quad)
+    del image
     table_left, table_top, table_right, table_bottom, header_bottom = _detect_table(
         warped
     )
