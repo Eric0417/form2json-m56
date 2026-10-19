@@ -263,24 +263,24 @@ export default function App() {
     setGroupErrors({});
   }
 
-  function exportJson() {
-    downloadText(
+  async function exportJson() {
+    await downloadText(
       safeFilename(document, "json"),
       toJsonText(document),
       "application/json;charset=utf-8",
     );
   }
 
-  function exportCsv() {
-    downloadText(
+  async function exportCsv() {
+    await downloadText(
       safeFilename(document, "csv"),
       toCsvText(document),
       "text/csv;charset=utf-8",
     );
   }
 
-  function exportXlsx() {
-    downloadBlob(
+  async function exportXlsx() {
+    await downloadBlob(
       safeFilename(document, "xlsx"),
       new Blob([toXlsxArray(document)], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -338,9 +338,9 @@ export default function App() {
       onStageChange={updateStage}
       onLaneChange={updateLane}
       onRetryGroup={(group) => void retryGroup(group)}
-      onExportJson={exportJson}
-      onExportCsv={exportCsv}
-      onExportXlsx={exportXlsx}
+      onExportJson={() => void exportJson()}
+      onExportCsv={() => void exportCsv()}
+      onExportXlsx={() => void exportXlsx()}
     />
   );
 }
