@@ -20,5 +20,9 @@ export default defineConfig({
       name: "mobile",
       use: { ...devices["iPhone 13"], browserName: "chromium" },
     },
+    {
+      name: "iphone-safari",
+      use: { ...devices["iPhone 13"], browserName: "webkit" },
+    },
   ],
 });
